@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 import logging
 from typing import Tuple, List, Dict
-import yaml
+import json
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
@@ -32,7 +32,7 @@ class FeatureEngineer:
         """
         if config_path:
             with open(config_path, 'r') as file:
-                self.config = yaml.safe_load(file)
+                self.config = json.load(file)
         else:
             self.config = {}
         
@@ -182,19 +182,23 @@ class FeatureEngineer:
         if X.empty:
             logger.warning("No features available for PCA")
             return pd.DataFrame(), pd.Series()
-        
+        selected_cols = ["log_budget", "starpowr", "log_addict", "log_cmngsoon", "log_fandango", "cntwait3"]
+        X1 = X[selected_cols]
+
+        # Create X2 by dropping those columns
+        X2 = X.drop(columns=selected_cols)
         # Apply PCA to all features (no component limit initially)
-        features_pca_full, pca_info = self.apply_pca(X, fit=True, n_components=None)
+        features_pca_full, pca_info = self.apply_pca(X1, fit=True, n_components=None)
         
         # Select optimal number of PCA components using variance threshold
         optimal_components = self.select_pca_components(pca_info, method='variance_threshold')
         
         # Select only the optimal number of components from the full PCA result
         features_pca_selected = features_pca_full.iloc[:, :optimal_components]
-        
+        Xall = pd.concat([features_pca_selected, X2], axis=1)
         logger.info(f"PCA features shape: {features_pca_selected.shape}")
         logger.info(f"Used {optimal_components} PCA components out of {features_pca_full.shape[1]} total")
-        return features_pca_selected, y
+        return Xall, y
     
     def save_feature_artifacts(self, output_dir: str):
         """

@@ -6,13 +6,12 @@ import pandas as pd
 import numpy as np
 import logging
 from typing import Tuple, List
-import yaml
+import json
 import os
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
 
 class DataPreprocessor:
     """
@@ -28,12 +27,12 @@ class DataPreprocessor:
         """
         if config_path:
             with open(config_path, 'r') as file:
-                self.config = yaml.safe_load(file)
+                self.config = json.load(file)
         else:
             self.config = {}
         
         self.log_transform_columns = self.config.get('feature_engineering', {}).get(
-            'log_transform_columns', ['box', 'budget', 'addict', 'cmngsoon', 'fandango']
+            'log_transform_columns', ['box', 'budget', 'starpowr', 'addict', 'cmngsoon', 'fandango', 'cntwait3']
         )
         self.skewness_threshold = self.config.get('feature_engineering', {}).get(
             'skewness_threshold', 1.0
@@ -158,9 +157,8 @@ class DataPreprocessor:
         df_processed = self.clean_data(df)
         
         # Analyze skewness for continuous variables
-        continuous_vars = ['box', 'budget', 'starpowr']
-        if all(col in df_processed.columns for col in continuous_vars):
-            self.analyze_skewness(df_processed, continuous_vars)
+        if all(col in df_processed.columns for col in self.log_transform_columns):
+            self.analyze_skewness(df_processed, self.log_transform_columns)
         
         # Apply log transformation to skewed variables
         skewed_cols = self.identify_skewed_columns(df_processed, self.log_transform_columns)

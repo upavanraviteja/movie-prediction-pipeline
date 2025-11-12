@@ -1,0 +1,35 @@
+{
+  "data": {
+    "input_path": "/opt/ml/processing/input/boxOffice.csv",
+    "output_path": "/opt/ml/processing/output",
+    "train_test_split": 0.8,
+    "random_state": 42
+  },
+  "feature_engineering": {
+    "log_transform_columns": ["box", "budget", "starpowr", "addict", "cmngsoon", "fandango", "cntwait3"],
+    "skewness_threshold": 1.0,
+    "pca_components": 3,
+    "variance_threshold": 0.8
+  },
+  "model": {
+    "type": "linear_regression",
+    "target_column": "log_box",
+    "drop_columns": ["box", "budget", "addict", "cmngsoon", "fandango"],
+    "significance_level": 0.1
+  },
+  "sagemaker": {
+    "role": "arn:aws:iam::123456789012:role/SageMakerExecutionRole",
+    "instance_type": "ml.m5.large",
+    "instance_count": 1,
+    "framework_version": "1.0-1",
+    "py_version": "py3"
+  },
+  "pipeline": {
+    "name": "movie-box-office-prediction",
+    "description": "MLOps pipeline for predicting movie box office revenue"
+  },
+  "monitoring": {
+    "enable_model_monitor": true,
+    "schedule_expression": "cron(0 12 * * ? *)"
+  }
+}
